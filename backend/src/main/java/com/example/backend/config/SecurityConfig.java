@@ -6,68 +6,76 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import static org.springframework.security.config.http.SessionCreationPolicy.STATELESS;
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity
 @RequiredArgsConstructor
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
-    private final UserDetailsService userDetailsService;
+public class SecurityConfig {
 
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-    }
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http.cors(withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(authorizeRequests ->
+                        authorizeRequests
+                                .requestMatchers(
+                                        "/auth/**",
+                                        "/registration/**",
+                                        "/v2/api-docs",
+                                        "/configuration/ui",
+                                        "/swagger-resources/**",
+                                        "/configuration/security",
+                                        "/swagger-ui.html",
+                                        "/webjars/**",
+                                        "/ping").permitAll()
+                                .anyRequest().authenticated()
+                )
+                .addFilterBefore(authorizationFilterBean(), UsernamePasswordAuthenticationFilter.class);
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        CorsConfiguration corsConfig = new CorsConfiguration().applyPermitDefaultValues();
-        corsConfig.addAllowedMethod(String.valueOf(HttpMethod.DELETE));
-        corsConfig.addAllowedMethod(String.valueOf(HttpMethod.PUT));
-        http.cors().configurationSource(request -> corsConfig);
-        http.csrf().disable();
-        http.sessionManagement().sessionCreationPolicy(STATELESS);
-        http.authorizeRequests().antMatchers(
-                        "/auth/**",
-                        "/registration/**",
-                        "/v2/api-docs",
-                        "/configuration/ui",
-                        "/swagger-resources/**",
-                        "/configuration/security",
-                        "/swagger-ui.html",
-                        "/tickets/available_tickets/**",
-                        "/validation",
-                        "/discounts/**",
-                        "/webjars/**",
-                        "/ping").permitAll()
-                .anyRequest().authenticated();
-        http.addFilterBefore(authorizationFilterBean(), UsernamePasswordAuthenticationFilter.class);
+        return http.build();
     }
 
     @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
-
-    @Bean
-    public JWTAuthorizationFilter authorizationFilterBean() throws Exception {
+    public JWTAuthorizationFilter authorizationFilterBean() {
         return new JWTAuthorizationFilter();
     }
 
     @Bean
-    public BCryptPasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration corsConfig = new CorsConfiguration().applyPermitDefaultValues();
+        corsConfig.addAllowedMethod(String.valueOf(HttpMethod.DELETE));
+        corsConfig.addAllowedMethod(String.valueOf(HttpMethod.PUT));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfig);
+
+        return source;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManagerBean(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 }

@@ -5,7 +5,8 @@ import com.example.backend.dto.AuthTokens;
 import com.example.backend.dto.LoginUser;
 import com.example.backend.service.AuthService;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,16 +14,15 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 @RestController
 @RequestMapping(path = "/auth")
+@RequiredArgsConstructor
 public class AuthController {
-    @Autowired
-    private AuthService service;
+    private final AuthService service;
 
     @PostMapping("/login")
     ResponseEntity<Object> login(@Valid @RequestBody LoginUser loginUser)

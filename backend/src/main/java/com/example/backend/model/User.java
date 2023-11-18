@@ -1,13 +1,10 @@
 package com.example.backend.model;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-
-import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.Collection;
 
 @Getter
 @Setter

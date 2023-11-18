@@ -1,9 +1,8 @@
 package com.example.backend.dto;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.*;
-
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Size;
 
 @ToString
 @Setter
