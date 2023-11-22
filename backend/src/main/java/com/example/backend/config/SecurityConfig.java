@@ -1,14 +1,11 @@
 package com.example.backend.config;
 
-//import com.example.backend.security.CognitoAccessDeniedHandler;
-//import com.example.backend.security.CognitoAuthenticationEntryPoint;
-//import com.example.backend.security.CognitoAuthenticationProvider;
-import com.example.backend.security.CognitoConfigurer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -30,7 +27,6 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final CognitoConfigurer cognitoConfigurer;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(withDefaults())
@@ -50,7 +46,8 @@ public class SecurityConfig {
                                         "/ping").permitAll()
                                 .anyRequest().authenticated()
                 )
-                .apply(cognitoConfigurer);
+                .oauth2ResourceServer(configurer -> configurer
+                        .jwt(Customizer.withDefaults()));
 
         return http.build();
     }

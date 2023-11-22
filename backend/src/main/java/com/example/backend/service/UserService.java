@@ -6,7 +6,5 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 public interface UserService {
-
-    UserDetails loadUserByJwt(Jwt jwt);
     User registerNewUserAccount(RegisterUser userDto);
 }
