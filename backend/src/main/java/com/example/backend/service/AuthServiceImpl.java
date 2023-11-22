@@ -3,74 +3,86 @@ package com.example.backend.service;
 import com.example.backend.dto.AuthTokens;
 import com.example.backend.dto.LoginUser;
 import com.example.backend.exception.TokenExpiredException;
-import com.example.backend.model.User;
-import com.example.backend.repository.UserRepository;
-import com.example.backend.security.TokenProvider;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.cognitoidentity.model.NotAuthorizedException;
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.*;
 
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService{
-
-    private final UserRepository userRepository;
-
-    private final AuthenticationManager authenticationManager;
-
-    private final UserDetailsService userDetailsService;
-
-    private final TokenProvider tokenProvider;
-
-    @Value("${jwt.token.access-token.expiration-time}")
-    private int accessTokenExp;
-
-    @Value("${jwt.token.refresh-token.expiration-time}")
-    private int refreshTokenExp;
+    @Value("${cognito.clientId}")
+    private String awsClientId;
 
     @Override
-    public AuthTokens authenticateUser(LoginUser loginUser) throws JsonProcessingException, BadCredentialsException {
-        Authentication authentication;
+    public AuthTokens authenticateUser(LoginUser loginUser) throws BadCredentialsException {
+        CognitoIdentityProviderClient cognitoClient = CognitoIdentityProviderClient.builder()
+                .region(Region.US_EAST_1)
+                .build();
+
+        Map<String, String> authParams = new HashMap<>();
+        authParams.put("USERNAME", loginUser.getLogin());
+        authParams.put("PASSWORD", loginUser.getPassword());
+        //authParams.put("SECRET_HASH", calculateSecretHash());
+
+        InitiateAuthRequest authRequest = InitiateAuthRequest.builder()
+                .clientId(awsClientId)
+                .authFlow(AuthFlowType.USER_PASSWORD_AUTH)
+                .authParameters(authParams)
+                .build();
+
         try {
-            authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginUser.getLogin(), loginUser.getPassword()));
-        } catch (AuthenticationException ex) {
+            InitiateAuthResponse authResponse = cognitoClient.initiateAuth(authRequest);
+            AuthenticationResultType authenticationResult = authResponse.authenticationResult();
+            String accessToken = authenticationResult.accessToken();
+            // String idToken = authenticationResult.idToken();
+            String refreshToken = authenticationResult.refreshToken();
+
+            log.info("User correctly authenticated");
+
+            return new AuthTokens(accessToken, refreshToken);
+
+        } catch (NotAuthorizedException e) {
+            log.error("User could not be authorized");
+            throw new BadCredentialsException("User could not be authorized");
+        } catch (UserNotConfirmedException e) {
+            log.error("User is not confirmed");
+            throw new BadCredentialsException("User is not confirmed");
+        } catch (UserNotFoundException e) {
+            log.error("Password or login invalid");
             throw new BadCredentialsException("Password or login invalid");
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new RuntimeException();
         }
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String login = authentication.getName();
-        User user = userRepository.findByLogin(login);
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        final String accessToken = tokenProvider.generateAccessToken(user, authorities, accessTokenExp);
-        final String refreshToken = tokenProvider.generateRefreshToken(user, refreshTokenExp);
-        return new AuthTokens(accessToken, refreshToken);
     }
 
     @Override
     public AuthTokens refreshTokens(String refreshToken) throws TokenExpiredException {
-        String accessToken;
-        try {
-            String login = tokenProvider.getUsernameFromToken(refreshToken);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(login);
-            User user = userRepository.findByLogin(login);
-            accessToken = tokenProvider.generateAccessToken(user, userDetails.getAuthorities(), accessTokenExp);
-        }catch (Exception e){
-            throw new TokenExpiredException();
-        }
-        return new AuthTokens(accessToken, refreshToken);
+        return null;
     }
+
+//    private String calculateSecretHash() {
+//        SecretKeySpec signingKey = new SecretKeySpec(
+//                awsClientSecret.getBytes(StandardCharsets.UTF_8),
+//                "HmacSHA256");
+//        try {
+//            Mac mac = Mac.getInstance("HmacSHA256");
+//            mac.init(signingKey);
+//            mac.update(awsClientName.getBytes(StandardCharsets.UTF_8));
+//            byte[] rawHmac = mac.doFinal(awsClientId.getBytes(StandardCharsets.UTF_8));
+//            return Base64.getEncoder().encodeToString(rawHmac);
+//        } catch (Exception e) {
+//            throw new RuntimeException("Error while calculating ");
+//        }
+//    }
 }
