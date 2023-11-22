@@ -36,7 +36,6 @@ public class SecurityConfig {
                         authorizeRequests
                                 .requestMatchers(
                                         "/auth/**",
-                                        //"/registration/**",
                                         "/v2/api-docs",
                                         "/configuration/ui",
                                         "/swagger-resources/**",

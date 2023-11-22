@@ -22,8 +22,7 @@ export class RegisterComponent implements OnInit {
 
   ngOnInit(): void {
     this.form = new FormGroup({
-      firstName: new FormControl("", [Validators.required]),
-      lastName: new FormControl("", [Validators.required]),
+      email: new FormControl("", [Validators.required, Validators.email]),
       username: new FormControl("", [Validators.required]),
       password: new FormControl("", [Validators.required, Validators.minLength(6)])
     });
@@ -38,12 +37,11 @@ export class RegisterComponent implements OnInit {
       return;
     }
 
-    const surname = this.form.get("firstName")?.value
-    const name = this.form.get("lastName")?.value
+    const email = this.form.get("email")?.value
     const login = this.form.get("username")?.value
     const password = this.form.get("password")?.value
 
-    const user: User = {surname, name, login, password}
+    const user: User = {email, login, password}
 
     this.loading = true;
     this.userService.register(user)

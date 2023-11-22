@@ -12,12 +12,8 @@ import lombok.*;
 public class RegisterUser {
 
     @NotEmpty()
-    @Size(min = 3, message = "Imie musi mieć przynajmniej 3 znaki")
-    private String surname;
-
-    @NotEmpty()
-    @Size(min = 3, message = "Nazwisko musi mieć przynajmniej 3 znaki")
-    private String name;
+    @Size(min = 5, message = "Email musi mieć przynajmniej 5 znaki")
+    private String email;
 
     @NotEmpty()
     @Size(min = 3, message = "Login musi mieć przynajmniej 3 znaki")
