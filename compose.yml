@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - database
+  
+    database:
+      image: 'mysql:latest'
+      environment:
+        - 'MYSQL_DATABASE=mydatabase'
+        - 'MYSQL_PASSWORD=secret'
+        - 'MYSQL_ROOT_PASSWORD=root'
+        - 'MYSQL_USER=user'
+      ports:
+        - '3306:3306'
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4200:4200"
