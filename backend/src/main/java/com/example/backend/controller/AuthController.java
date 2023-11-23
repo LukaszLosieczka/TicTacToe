@@ -2,7 +2,9 @@ package com.example.backend.controller;
 
 import com.auth0.jwt.exceptions.JWTCreationException;
 import com.example.backend.dto.AuthTokens;
+import com.example.backend.dto.ConfirmationToken;
 import com.example.backend.dto.LoginUser;
+import com.example.backend.dto.RegisterUser;
 import com.example.backend.service.AuthService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
@@ -13,9 +15,6 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 
 @RestController
@@ -24,7 +23,7 @@ import static org.springframework.http.HttpStatus.FORBIDDEN;
 public class AuthController {
     private final AuthService service;
 
-    @PostMapping("/login")
+    @PostMapping("login")
     ResponseEntity<Object> login(@Valid @RequestBody LoginUser loginUser)
             throws AuthenticationException, JsonProcessingException, IllegalArgumentException, JWTCreationException {
         AuthTokens tokens;
@@ -36,13 +35,31 @@ public class AuthController {
         return new ResponseEntity<>(tokens, HttpStatus.OK);
     }
 
+    @PostMapping("signup")
+    ResponseEntity<Object> signUp(@Valid @RequestBody RegisterUser userDto) {
+        try {
+            service.registerNewUserAccount(userDto);
+        } catch (IllegalArgumentException ex) {
+            return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>("User registered, but still needs confirmation", HttpStatus.CREATED);
+    }
+
+    @PostMapping("confirm_user")
+    ResponseEntity<Object> confirm(@Valid @RequestBody ConfirmationToken token) {
+        try {
+            service.confirmUserAccount(token);
+        } catch (IllegalArgumentException ex) {
+            return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+        return new ResponseEntity<>("User confirmed", HttpStatus.CREATED);
+    }
+
     @GetMapping("/refresh_token")
-    ResponseEntity<Object> refreshToken(HttpServletRequest request){
-        String authorizationHeader = request.getHeader(AUTHORIZATION);
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+    ResponseEntity<Object> refreshToken(@RequestParam String token){
+        if (token != null) {
             try {
-                String refreshToken = authorizationHeader.substring("Bearer ".length());
-                AuthTokens tokens = service.refreshTokens(refreshToken);
+                AuthTokens tokens = service.refreshTokens(token);
                 return new ResponseEntity<>(tokens, HttpStatus.OK);
             } catch (Exception exception) {
                 return new ResponseEntity<>(exception.getMessage(), FORBIDDEN);

@@ -1,76 +1,163 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.AuthTokens;
+import com.example.backend.dto.ConfirmationToken;
 import com.example.backend.dto.LoginUser;
+import com.example.backend.dto.RegisterUser;
 import com.example.backend.exception.TokenExpiredException;
-import com.example.backend.model.User;
-import com.example.backend.repository.UserRepository;
-import com.example.backend.security.TokenProvider;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
+import software.amazon.awssdk.services.cognitoidentityprovider.model.*;
 
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService{
+    @Value("${cognito.clientId}")
+    private String awsClientId;
 
-    private final UserRepository userRepository;
-
-    private final AuthenticationManager authenticationManager;
-
-    private final UserDetailsService userDetailsService;
-
-    private final TokenProvider tokenProvider;
-
-    @Value("${jwt.token.access-token.expiration-time}")
-    private int accessTokenExp;
-
-    @Value("${jwt.token.refresh-token.expiration-time}")
-    private int refreshTokenExp;
+    @Value("${cognito.region}")
+    private String awsRegion;
 
     @Override
-    public AuthTokens authenticateUser(LoginUser loginUser) throws JsonProcessingException, BadCredentialsException {
-        Authentication authentication;
+    public AuthTokens authenticateUser(LoginUser loginUser) throws BadCredentialsException {
+        CognitoIdentityProviderClient cognitoClient = CognitoIdentityProviderClient.builder()
+                .region(Region.of(awsRegion))
+                .build();
+
+        Map<String, String> authParams = new HashMap<>();
+        authParams.put("USERNAME", loginUser.getLogin());
+        authParams.put("PASSWORD", loginUser.getPassword());
+        //authParams.put("SECRET_HASH", calculateSecretHash());
+
+        InitiateAuthRequest authRequest = InitiateAuthRequest.builder()
+                .clientId(awsClientId)
+                .authFlow(AuthFlowType.USER_PASSWORD_AUTH)
+                .authParameters(authParams)
+                .build();
+
         try {
-            authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginUser.getLogin(), loginUser.getPassword()));
-        } catch (AuthenticationException ex) {
+            InitiateAuthResponse authResponse = cognitoClient.initiateAuth(authRequest);
+            AuthenticationResultType authenticationResult = authResponse.authenticationResult();
+            String accessToken = authenticationResult.accessToken();
+            // String idToken = authenticationResult.idToken();
+            String refreshToken = authenticationResult.refreshToken();
+
+            log.info("User " + loginUser.getLogin() + " correctly authenticated");
+
+            return new AuthTokens(accessToken, refreshToken);
+
+        } catch (NotAuthorizedException e) {
+            log.error("Password or login invalid");
             throw new BadCredentialsException("Password or login invalid");
+        } catch (UserNotConfirmedException e) {
+            log.error("User is not confirmed");
+            throw new BadCredentialsException("User is not confirmed");
+        } catch (UserNotFoundException e) {
+            log.error("User not found");
+            throw new BadCredentialsException("User not found");
         }
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String login = authentication.getName();
-        User user = userRepository.findByLogin(login);
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        final String accessToken = tokenProvider.generateAccessToken(user, authorities, accessTokenExp);
-        final String refreshToken = tokenProvider.generateRefreshToken(user, refreshTokenExp);
-        return new AuthTokens(accessToken, refreshToken);
     }
 
     @Override
     public AuthTokens refreshTokens(String refreshToken) throws TokenExpiredException {
-        String accessToken;
-        try {
-            String login = tokenProvider.getUsernameFromToken(refreshToken);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(login);
-            User user = userRepository.findByLogin(login);
-            accessToken = tokenProvider.generateAccessToken(user, userDetails.getAuthorities(), accessTokenExp);
-        }catch (Exception e){
-            throw new TokenExpiredException();
-        }
+        CognitoIdentityProviderClient cognitoClient = CognitoIdentityProviderClient.builder()
+                .region(Region.of(awsRegion))
+                .build();
+
+        Map<String, String> authParams = new HashMap<>();
+        authParams.put("REFRESH_TOKEN", refreshToken);
+
+        InitiateAuthRequest refreshTokenRequest = InitiateAuthRequest.builder()
+                .clientId(awsClientId)
+                .authFlow(AuthFlowType.REFRESH_TOKEN_AUTH)
+                .authParameters(authParams)
+                .build();
+
+        InitiateAuthResponse refreshTokenResponse = cognitoClient.initiateAuth(refreshTokenRequest);
+        AuthenticationResultType authenticationResult = refreshTokenResponse.authenticationResult();
+
+        log.info("Token refreshed correctly. Returning new token");
+
+        String accessToken = authenticationResult.accessToken();
+
         return new AuthTokens(accessToken, refreshToken);
     }
+
+    @Override
+    public void registerNewUserAccount(RegisterUser userDto) {
+        CognitoIdentityProviderClient cognitoClient = CognitoIdentityProviderClient.builder()
+                .region(Region.of(awsRegion))
+                .build();
+
+        SignUpRequest signUpRequest = SignUpRequest.builder()
+                .clientId(awsClientId)
+                .username(userDto.getLogin())
+                .password(userDto.getPassword())
+                .userAttributes(
+                        AttributeType.builder().name("email").value(userDto.getEmail()).build()
+                )
+                .build();
+
+        try {
+            cognitoClient.signUp(signUpRequest);
+        }catch(UsernameExistsException ex){
+            log.info(ex.getMessage());
+            throw new IllegalArgumentException("Nieudana próba utworzenia konta. Konto o podanym lognie już istnieje");
+        }
+        catch(InvalidParameterException ex){
+            log.info(ex.getMessage());
+            throw new IllegalArgumentException("Nieudana próba utworzenia konta. Podano nieprawidłowe atrybuty");
+        }
+
+        log.info("User " + userDto.getLogin() + " signed up, but still needs confirmation");
+    }
+
+    @Override
+    public void confirmUserAccount(ConfirmationToken token) {
+        CognitoIdentityProviderClient cognitoClient = CognitoIdentityProviderClient.builder()
+                .region(Region.of(awsRegion))
+                .build();
+
+        ConfirmSignUpRequest confirmSignUpRequest = ConfirmSignUpRequest.builder()
+                .clientId(awsClientId)
+                .username(token.getLogin())
+                .confirmationCode(token.getValue())
+                .build();
+        try {
+            cognitoClient.confirmSignUp(confirmSignUpRequest);
+        }catch(ExpiredCodeException ex){
+            log.info(ex.getMessage());
+            throw new IllegalArgumentException("Nieudana próba potwierdzenia konta. Podany kod stracił ważność");
+        }
+        catch(InvalidParameterException ex){
+            log.info(ex.getMessage());
+            throw new IllegalArgumentException("Nieudana próba potwierdzenia konta");
+        }
+        log.info("User " + token.getLogin() + " confirmed successfully");
+    }
+
+
+//    private String calculateSecretHash() {
+//        SecretKeySpec signingKey = new SecretKeySpec(
+//                awsClientSecret.getBytes(StandardCharsets.UTF_8),
+//                "HmacSHA256");
+//        try {
+//            Mac mac = Mac.getInstance("HmacSHA256");
+//            mac.init(signingKey);
+//            mac.update(awsClientName.getBytes(StandardCharsets.UTF_8));
+//            byte[] rawHmac = mac.doFinal(awsClientId.getBytes(StandardCharsets.UTF_8));
+//            return Base64.getEncoder().encodeToString(rawHmac);
+//        } catch (Exception e) {
+//            throw new RuntimeException("Error while calculating ");
+//        }
+//    }
 }

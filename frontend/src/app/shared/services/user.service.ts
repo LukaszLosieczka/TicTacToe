@@ -43,7 +43,7 @@ export class UserService {
       'Content-Type': 'application/json'
     });
     // @ts-ignore
-    return this.http.post<any>(environment.apiUrl + "registration/register", user, {headers, responseType: 'text'});
+    return this.http.post<any>(environment.apiUrl + "auth/signup", user, {headers, responseType: 'text'});
   }
 
   refreshTokens() {
