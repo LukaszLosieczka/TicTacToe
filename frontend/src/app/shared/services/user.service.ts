@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {HttpClient, HttpHeaders} from "@angular/common/http";
+import {HttpClient, HttpHeaders, HttpParams} from "@angular/common/http";
 import {map, Observable} from "rxjs";
 import {User} from "../../user/model/User";
 import {jwtDecode} from "jwt-decode";
@@ -51,13 +51,15 @@ export class UserService {
 
     const headers = new HttpHeaders({
       'Accept': 'application/json',
-      'Authorization': `Bearer ${rt}`,
       'skip': 'true'
     });
 
+    let params = new HttpParams();
+    params = params.append('token', <string>rt)
+
     console.log("refreshing tokens");
 
-    return this.http.get<any>(environment.apiUrl + "auth/refresh_token", {headers})
+    return this.http.get<any>(environment.apiUrl + "auth/refresh_token", {headers: headers, params: params})
       .pipe(map(
         data => {
           const rt = data.refresh_token;
@@ -80,6 +82,15 @@ export class UserService {
     }
     const atPayload = jwtDecode<TokenPayload>(at);
     return atPayload.roles[0];
+  }
+
+  getUserId(): string | undefined{
+    const at = this.getAccessToken();
+    if (at == null) {
+      return at
+    }
+    const atPayload = jwtDecode<TokenPayload>(at);
+    return atPayload.sub;
   }
 
   getAccessToken(): string | undefined {
@@ -106,7 +117,7 @@ export class UserService {
      return;
     }
 
-    this.isLoggedIn = this.isTokenValid(rt);
+    this.isLoggedIn = true;
   }
 
   private saveTokens(refreshToken: string, accessToken: string): void {
