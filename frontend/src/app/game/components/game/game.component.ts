@@ -1,8 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {WebSocketService} from "../../services/web-socket.service";
-import {UserService} from "../../../shared/services/user.service";
-
 @Component({
   selector: 'app-game',
   standalone: true,
@@ -15,23 +13,21 @@ export class GameComponent implements OnInit{
   isConnected = false;
   receivedMessage = '';
 
-  constructor(private webSocketService: WebSocketService, private userService: UserService) {}
+  constructor(private webSocketService: WebSocketService) {}
 
   ngOnInit(): void {
-    this.webSocketService.connect();
-    const userId = this.userService.getUserId();
-    const topic = `/topic/greetings`;
-    // this.webSocketService.subscribe(topic)
+    const topic = `/user/queue/notifications`;
+    this.webSocketService.createAndConnect(topic);
     this.webSocketService.getConnectedStatus().subscribe((status) => {
       this.isConnected = status;
     });
-    // this.webSocketService.getMessage(topic).subscribe((message) => {
-    //   this.receivedMessage = message;
-    // });
+    this.webSocketService.getMessage(topic).subscribe((message) => {
+      this.receivedMessage = message;
+    });
   }
 
-  sendMessage(message: string): void {
-    this.webSocketService.send('/hello', message); // Replace with your destination
+  joinQueue(): void {
+    this.webSocketService.send('/app/queue', "");
   }
 
   ngOnDestroy(): void {

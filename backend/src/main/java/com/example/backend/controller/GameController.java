@@ -16,14 +16,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Slf4j
 public class GameController {
 
-    private SimpMessagingTemplate messagingTemplate;
-    private QueueService queueService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final QueueService queueService;
 
     @MessageMapping("/hello")
     @SendTo("/topic/greetings")
     public String greeting(String message) throws Exception {
-        log.info(message);
         Thread.sleep(1000); // simulated delay
+        log.info("Sending Hello to " + SecurityContextHolder.getContext().getAuthentication().getName());
         return "Hello!";
     }
 
@@ -33,6 +33,7 @@ public class GameController {
         queueService.addPlayerToQueue(playerId);
         if(queueService.hasMatch()){
             Match match = queueService.findMatch();
+            log.info("Player: " + match.getPlayer1Id());
             messagingTemplate.convertAndSendToUser(
                     match.getPlayer1Id(),
                     "/queue/notifications",

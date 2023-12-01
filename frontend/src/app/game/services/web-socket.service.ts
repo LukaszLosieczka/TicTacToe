@@ -16,28 +16,38 @@ export class WebSocketService {
   private subscriptions: Map<string, Stomp.StompSubscription> = new Map<string, Stomp.StompSubscription>();
   private messages: Map<string, BehaviorSubject<string>> = new Map<string, BehaviorSubject<string>>();
 
-  constructor(private userService: UserService) {
-    this.createClient();
+  constructor(private userService: UserService) {}
+
+  createAndConnect(topic?: string): void {
+    this.refreshAccessToken(() => {
+      this.configureClient(topic);
+      this.connect();
+    });
   }
 
-  createClient(): void {
-    this.socket = new SockJS(environment.brokerUrl);
-    this.stompClient = Stomp.Stomp.over(this.socket);
-    // this.stompClient.connectHeaders = {
-    //   Authorization: <string>this.userService.getAccessToken()
-    // };
+  configureClient(topic?: string): void {
     const that = this;
+    this.socket = new SockJS(environment.brokerUrl);
+    this.stompClient = Stomp.Stomp.over(() => {
+      return that.socket
+    });
+    this.stompClient.configure({connectionTimeout: 10000});
+    this.stompClient.reconnectDelay = 1000;
+
     this.stompClient.onConnect = (frame) => {
       console.log('Connected: ' + frame);
       that.isConnected.next(true);
+      if (topic) {
+        that.subscribe(topic);
+      }
     };
 
-    this.stompClient.onDisconnect = () => {
-      console.log("Disconnected");
+    this.stompClient.onDisconnect = (frame) => {
+      console.log("Disconnected: " + frame);
       that.isConnected.next(false);
       that.subscriptions.forEach((subscription) => subscription.unsubscribe());
       that.subscriptions.clear();
-    }
+    };
 
     this.stompClient.onWebSocketError = (error) => {
       console.error('Error with websocket', error);
@@ -50,6 +60,9 @@ export class WebSocketService {
   }
 
   getMessage(topic: string): BehaviorSubject<string> {
+    if(!this.messages.get(topic)) {
+      this.messages.set(topic, new BehaviorSubject<string>(''));
+    }
     return <BehaviorSubject<string>> this.messages.get(topic);
   }
 
@@ -65,8 +78,11 @@ export class WebSocketService {
   }
 
   subscribe(topic: string): void{
-    this.messages.set(topic, new BehaviorSubject<string>(''));
+    if(!this.messages.get(topic)) {
+      this.messages.set(topic, new BehaviorSubject<string>(''));
+    }
     const subscription = this.stompClient.subscribe(topic, (message) => {
+      console.log("Message received: " + message.body);
       const receivedMessage = message.body;
       this.messages.get(topic)!.next(receivedMessage);
     });
@@ -82,11 +98,37 @@ export class WebSocketService {
   }
 
   connect(): void {
+    const accessToken = this.userService.getAccessToken();
+    if (accessToken) {
+      this.stompClient.connectHeaders = {
+        Authorization: `Bearer ${accessToken}`
+      };
+    }
     this.stompClient.activate();
   }
 
   disconnect(): void {
     this.stompClient.deactivate();
+  }
+
+  private refreshAccessToken(resolve: () => void): void {
+    const at = this.userService.getAccessToken();
+    const isAccessTokenValid = at && this.userService.isTokenValid(at);
+    if (this.userService.isLoggedIn && !isAccessTokenValid) {
+      this.userService.refreshTokens()
+        .subscribe({
+          next: () => {
+            console.log("Access token refreshed")
+            resolve();
+          },
+          error: err => {
+            console.log(err);
+            this.userService.logout();
+          }
+        });
+    } else {
+      resolve();
+    }
   }
 
 }
