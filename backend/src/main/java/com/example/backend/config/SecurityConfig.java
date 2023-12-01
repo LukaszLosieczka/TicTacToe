@@ -3,6 +3,7 @@ package com.example.backend.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
@@ -19,12 +20,14 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Collections;
+
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@RequiredArgsConstructor
+@Order(1)
 public class SecurityConfig {
 
     @Bean
@@ -36,6 +39,7 @@ public class SecurityConfig {
                         authorizeRequests
                                 .requestMatchers(
                                         "/auth/**",
+                                        "/ws/**",
                                         "/v2/api-docs",
                                         "/configuration/ui",
                                         "/swagger-resources/**",
@@ -66,6 +70,9 @@ public class SecurityConfig {
         CorsConfiguration corsConfig = new CorsConfiguration().applyPermitDefaultValues();
         corsConfig.addAllowedMethod(String.valueOf(HttpMethod.DELETE));
         corsConfig.addAllowedMethod(String.valueOf(HttpMethod.PUT));
+
+        corsConfig.setAllowCredentials(true);
+        corsConfig.setAllowedOrigins(Collections.singletonList("http://localhost"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfig);
