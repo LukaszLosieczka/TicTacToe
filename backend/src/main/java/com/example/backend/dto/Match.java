@@ -7,6 +7,7 @@ import lombok.*;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Match {
     String player1Id;
     String player2Id;

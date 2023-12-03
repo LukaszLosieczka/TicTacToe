@@ -1,6 +1,8 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.GameDto;
 import com.example.backend.dto.Match;
+import com.example.backend.service.GameService;
 import com.example.backend.service.QueueService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,8 @@ public class GameController {
     private final SimpMessagingTemplate messagingTemplate;
     private final QueueService queueService;
 
+    private final GameService gameService;
+
     @MessageMapping("/hello")
     @SendTo("/topic/greetings")
     public String greeting(String message) throws Exception {
@@ -33,16 +37,16 @@ public class GameController {
         queueService.addPlayerToQueue(playerId);
         if(queueService.hasMatch()){
             Match match = queueService.findMatch();
-            log.info("Player: " + match.getPlayer1Id());
+            GameDto gameDto = gameService.createNewGame(match);
             messagingTemplate.convertAndSendToUser(
                     match.getPlayer1Id(),
                     "/queue/notifications",
-                    "We have find you a game"
+                    gameDto
             );
             messagingTemplate.convertAndSendToUser(
                     match.getPlayer2Id(),
                     "/queue/notifications",
-                    "We have find you a game"
+                    gameDto
             );
         }
     }

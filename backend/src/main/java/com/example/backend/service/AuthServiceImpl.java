@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
@@ -110,6 +109,7 @@ class AuthServiceImpl implements AuthService{
 
         try {
             cognitoClient.signUp(signUpRequest);
+            log.info("User " + userDto.getLogin() + " signed up, but still needs confirmation");
         }catch(UsernameExistsException ex){
             log.info(ex.getMessage());
             throw new IllegalArgumentException("Nieudana próba utworzenia konta. Konto o podanym lognie już istnieje");
@@ -118,8 +118,6 @@ class AuthServiceImpl implements AuthService{
             log.info(ex.getMessage());
             throw new IllegalArgumentException("Nieudana próba utworzenia konta. Podano nieprawidłowe atrybuty");
         }
-
-        log.info("User " + userDto.getLogin() + " signed up, but still needs confirmation");
     }
 
     @Override
@@ -135,6 +133,7 @@ class AuthServiceImpl implements AuthService{
                 .build();
         try {
             cognitoClient.confirmSignUp(confirmSignUpRequest);
+            log.info("User " + token.getLogin() + " confirmed successfully");
         }catch(ExpiredCodeException ex){
             log.info(ex.getMessage());
             throw new IllegalArgumentException("Nieudana próba potwierdzenia konta. Podany kod stracił ważność");
@@ -143,7 +142,6 @@ class AuthServiceImpl implements AuthService{
             log.info(ex.getMessage());
             throw new IllegalArgumentException("Nieudana próba potwierdzenia konta");
         }
-        log.info("User " + token.getLogin() + " confirmed successfully");
     }
 
 

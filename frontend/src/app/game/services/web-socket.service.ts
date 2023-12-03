@@ -14,7 +14,7 @@ export class WebSocketService {
   private socket: WebSocket;
   private isConnected = new BehaviorSubject<boolean>(false);
   private subscriptions: Map<string, Stomp.StompSubscription> = new Map<string, Stomp.StompSubscription>();
-  private messages: Map<string, BehaviorSubject<string>> = new Map<string, BehaviorSubject<string>>();
+  private messages: Map<string, BehaviorSubject<object>> = new Map<string, BehaviorSubject<object>>();
 
   constructor(private userService: UserService) {}
 
@@ -59,11 +59,11 @@ export class WebSocketService {
     return this.isConnected;
   }
 
-  getMessage(topic: string): BehaviorSubject<string> {
+  getMessage(topic: string): BehaviorSubject<object> {
     if(!this.messages.get(topic)) {
-      this.messages.set(topic, new BehaviorSubject<string>(''));
+      this.messages.set(topic, new BehaviorSubject<object>({}));
     }
-    return <BehaviorSubject<string>> this.messages.get(topic);
+    return <BehaviorSubject<object>> this.messages.get(topic);
   }
 
   send(destination: string, message: string): void {
@@ -79,12 +79,12 @@ export class WebSocketService {
 
   subscribe(topic: string): void{
     if(!this.messages.get(topic)) {
-      this.messages.set(topic, new BehaviorSubject<string>(''));
+      this.messages.set(topic, new BehaviorSubject<object>({}));
     }
     const subscription = this.stompClient.subscribe(topic, (message) => {
       console.log("Message received: " + message.body);
       const receivedMessage = message.body;
-      this.messages.get(topic)!.next(receivedMessage);
+      this.messages.get(topic)!.next(JSON.parse(receivedMessage));
     });
     this.subscriptions.set(topic, subscription);
   }

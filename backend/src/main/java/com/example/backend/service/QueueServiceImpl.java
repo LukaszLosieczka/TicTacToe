@@ -28,9 +28,9 @@ class QueueServiceImpl implements QueueService{
 
     @Override
     public Match findMatch() {
-        Match match = new Match();
-        match.setPlayer1Id(queue.poll());
-        match.setPlayer2Id(queue.poll());
-        return match;
+        return Match.builder()
+                .player1Id(this.queue.poll())
+                .player2Id(this.queue.poll())
+                .build();
     }
 }
