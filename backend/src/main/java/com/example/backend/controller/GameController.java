@@ -20,7 +20,6 @@ public class GameController {
 
     private final SimpMessagingTemplate messagingTemplate;
     private final QueueService queueService;
-
     private final GameService gameService;
 
     @MessageMapping("/hello")
@@ -49,6 +48,12 @@ public class GameController {
                     gameDto
             );
         }
+    }
+
+    @MessageMapping("/queue/disconnect")
+    public void removeFromQueue(){
+        String playerId = SecurityContextHolder.getContext().getAuthentication().getName();
+        queueService.removePlayerFromQueue(playerId);
     }
 
     @GetMapping("game/test")

@@ -5,8 +5,9 @@ import {RegisterComponent} from "./user/components/register/register.component";
 import {AuthGuard} from "./utils/auth.guard";
 import {NgModule} from "@angular/core";
 import {HomeLayoutComponent} from "./layouts/home-layout/home-layout.component";
-import {GameComponent} from "./game/components/game/game.component";
+import {QueueComponent} from "./game/components/queue/queue.component";
 import {LeaderBoardComponent} from "./game/components/leader-board/leader-board.component";
+import {GameComponent} from "./game/components/game/game.component";
 
 export const routes: Routes = [
   {
@@ -19,12 +20,18 @@ export const routes: Routes = [
     component: HomeLayoutComponent,
     children: [
       {
-        path: 'game',
-        component: GameComponent
+        path: 'queue',
+        canActivate: [AuthGuard],
+        component: QueueComponent
       },
       {
         path: 'leader-board',
         component: LeaderBoardComponent
+      },
+      {
+        path: 'game',
+        canActivate: [AuthGuard],
+        component: GameComponent
       }
       ]
   },

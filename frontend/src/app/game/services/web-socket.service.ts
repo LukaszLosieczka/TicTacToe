@@ -47,6 +47,7 @@ export class WebSocketService {
       that.isConnected.next(false);
       that.subscriptions.forEach((subscription) => subscription.unsubscribe());
       that.subscriptions.clear();
+      that.messages.clear();
     };
 
     this.stompClient.onWebSocketError = (error) => {
@@ -91,6 +92,7 @@ export class WebSocketService {
 
   unsubscribe(topic: string): void {
     const subscription = this.subscriptions.get(topic);
+    this.messages.delete(topic);
     if (subscription) {
       subscription.unsubscribe();
       this.subscriptions.delete(topic);

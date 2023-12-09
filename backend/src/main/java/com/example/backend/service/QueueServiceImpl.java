@@ -22,6 +22,13 @@ class QueueServiceImpl implements QueueService{
     }
 
     @Override
+    public void removePlayerFromQueue(String playerId) {
+        if(!queue.contains(playerId)){
+            queue.remove(playerId);
+        }
+    }
+
+    @Override
     public Boolean hasMatch() {
         return queue.size() % 2 == 0;
     }
