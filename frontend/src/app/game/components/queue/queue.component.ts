@@ -2,7 +2,6 @@ import {Component, OnInit} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {WebSocketService} from "../../services/web-socket.service";
 import {Game} from "../../model/Game";
-import {Router} from "@angular/router";
 import {GameService} from "../../services/game.service";
 @Component({
   selector: 'app-queue',
@@ -31,7 +30,7 @@ export class QueueComponent implements OnInit{
       if(this.receivedGame.id) {
         this.inQueue = false;
         this.message = "Znaleziono grę!";
-        this,this.gameService.startGame(this.receivedGame);
+        this.gameService.startGame(this.receivedGame);
       }
     });
   }
@@ -44,7 +43,7 @@ export class QueueComponent implements OnInit{
 
   quitQueue(): void {
     this.inQueue = false;
-    this.webSocketService.send('app/queue/disconnect', "disconnect")
+    this.webSocketService.send('/app/queue/disconnect', "disconnect")
   }
 
   ngOnDestroy(): void {

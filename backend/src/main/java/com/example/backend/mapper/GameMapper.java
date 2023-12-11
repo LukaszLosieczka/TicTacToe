@@ -13,7 +13,9 @@ public class GameMapper {
         return GameDto.builder()
                 .id(game.getId().toString())
                 .player1(game.getPlayer1())
+                .player1Sign(game.getPlayer1Sign())
                 .player2(game.getPlayer2())
+                .player2Sign(game.getPlayer2Sign())
                 .board(GameMapper.convertStringToBoard(game.getBoard()))
                 .nextPlayer(game.getNextPlayer())
                 .creationDate(game.getCreationDate())
@@ -26,7 +28,9 @@ public class GameMapper {
         Game game = new Game();
         game.setId(UUID.fromString(gameDto.getId()));
         game.setPlayer1(gameDto.getPlayer1());
+        game.setPlayer1Sign(gameDto.getPlayer1Sign());
         game.setPlayer2(game.getPlayer2());
+        game.setPlayer2Sign(game.getPlayer2Sign());
         game.setBoard(GameMapper.convertBoardToString(gameDto.getBoard()));
         game.setNextPlayer(gameDto.getNextPlayer());
         game.setCreationDate(gameDto.getCreationDate());

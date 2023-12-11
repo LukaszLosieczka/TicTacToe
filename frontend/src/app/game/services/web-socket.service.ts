@@ -44,10 +44,10 @@ export class WebSocketService {
 
     this.stompClient.onDisconnect = (frame) => {
       console.log("Disconnected: " + frame);
-      that.isConnected.next(false);
       that.subscriptions.forEach((subscription) => subscription.unsubscribe());
       that.subscriptions.clear();
       that.messages.clear();
+      that.isConnected.next(false);
     };
 
     this.stompClient.onWebSocketError = (error) => {
@@ -84,8 +84,8 @@ export class WebSocketService {
     }
     const subscription = this.stompClient.subscribe(topic, (message) => {
       console.log("Message received: " + message.body);
-      const receivedMessage = message.body;
-      this.messages.get(topic)!.next(JSON.parse(receivedMessage));
+      const receivedMessage = JSON.parse(message.body);
+      this.messages.get(topic)!.next(receivedMessage);
     });
     this.subscriptions.set(topic, subscription);
   }

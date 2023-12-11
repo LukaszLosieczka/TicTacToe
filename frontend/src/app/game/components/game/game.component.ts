@@ -12,12 +12,29 @@ import {Game} from "../../model/Game";
 })
 export class GameComponent implements OnInit{
 
-  game: Game;
-
   constructor(private gameService: GameService) {}
 
   ngOnInit(): void {
-    this.game = this.gameService.getCurrentGame();
+  }
+
+  getGame(): Game{
+    return this.gameService.getCurrentGame();
+  }
+
+  makeMove(row: number, col: number): void{
+    this.gameService.makeMove(row, col);
+  }
+
+  canMove(): boolean{
+    return this.gameService.canMove() && !this.gameService.getCurrentGame().isFinished;
+  }
+
+  isCellEmpty(row: number, col: number){
+    return this.getGame().board[row][col] === "null";
+  }
+
+  ngOnDestroy(): void {
+    this.gameService.endGame();
   }
 
 }

@@ -2,10 +2,12 @@ package com.example.backend.controller;
 
 import com.example.backend.dto.GameDto;
 import com.example.backend.dto.Match;
+import com.example.backend.dto.MoveDto;
 import com.example.backend.service.GameService;
 import com.example.backend.service.QueueService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -54,6 +56,24 @@ public class GameController {
     public void removeFromQueue(){
         String playerId = SecurityContextHolder.getContext().getAuthentication().getName();
         queueService.removePlayerFromQueue(playerId);
+    }
+
+    @MessageMapping("/move/{gameId}")
+    public void makeMove(@DestinationVariable String gameId, MoveDto move){
+        String playerId = SecurityContextHolder.getContext().getAuthentication().getName();
+        GameDto gameDto = this.gameService.makeMove(gameId, playerId, move);
+        messagingTemplate.convertAndSendToUser(
+                playerId.equals(gameDto.getPlayer1()) ? gameDto.getPlayer2() : gameDto.getPlayer1(),
+                "/queue/game/notifications",
+                gameDto
+        );
+        if(gameDto.getIsFinished()){
+            messagingTemplate.convertAndSendToUser(
+                    playerId,
+                    "/queue/game/notifications",
+                    gameDto
+            );
+        }
     }
 
     @GetMapping("game/test")

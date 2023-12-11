@@ -20,8 +20,14 @@ public class Game {
     @Column(name = "player_1", nullable = false)
     private String player1;
 
+    @Column(name = "player_1_sign", nullable = false)
+    private String player1Sign;
+
     @Column(name = "player_2", nullable = false)
     private String player2;
+
+    @Column(name = "player_2_sign", nullable = false)
+    private String player2Sign;
 
     @Column(name = "board", nullable = false)
     private String board;

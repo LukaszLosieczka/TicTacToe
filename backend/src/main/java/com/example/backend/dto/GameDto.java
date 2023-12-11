@@ -13,7 +13,9 @@ import java.time.LocalDateTime;
 public class GameDto {
     private String id;
     private String player1;
+    private String player1Sign;
     private String player2;
+    private String player2Sign;
     private String[][] board;
     private String nextPlayer;
     private LocalDateTime creationDate;
