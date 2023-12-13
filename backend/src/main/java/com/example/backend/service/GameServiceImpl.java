@@ -11,10 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +38,14 @@ class GameServiceImpl implements GameService{
         }
         game.setIsFinished(false);
         return GameMapper.toGameDto(gameRepository.save(game));
+    }
+
+    @Override
+    public GameDto getCurrentGame(String playerId) {
+        Game currentGame = this.gameRepository.findByIsFinishedFalseAndPlayer1OrPlayer2(playerId).stream()
+                .max(Comparator.comparing(Game::getCreationDate))
+                .orElseThrow(() -> new IllegalArgumentException("Game not found!"));
+        return GameMapper.toGameDto(currentGame);
     }
 
     @Override

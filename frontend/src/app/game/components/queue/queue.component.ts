@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import {WebSocketService} from "../../services/web-socket.service";
 import {Game} from "../../model/Game";
 import {GameService} from "../../services/game.service";
+import {Router} from "@angular/router";
 @Component({
   selector: 'app-queue',
   standalone: true,
@@ -17,7 +18,11 @@ export class QueueComponent implements OnInit{
   receivedGame: Game;
   message: string;
 
-  constructor(private webSocketService: WebSocketService, private gameService: GameService) {}
+  constructor(private webSocketService: WebSocketService, private gameService: GameService, private router: Router) {
+    if(this.gameService.isGameActive){
+      this.router.navigate(['/game']);
+    }
+  }
 
   ngOnInit(): void {
     const topic = `/user/queue/notifications`;

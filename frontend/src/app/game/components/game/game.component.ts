@@ -12,13 +12,18 @@ import {Game} from "../../model/Game";
 })
 export class GameComponent implements OnInit{
 
-  constructor(private gameService: GameService) {}
-
-  ngOnInit(): void {
+  constructor(private gameService: GameService) {
+    this.gameService.checkForAGame();
   }
+
+  ngOnInit(): void {}
 
   getGame(): Game{
     return this.gameService.getCurrentGame();
+  }
+
+  isGameActive(): boolean{
+    return this.gameService.isGameActive;
   }
 
   makeMove(row: number, col: number): void{
@@ -34,7 +39,12 @@ export class GameComponent implements OnInit{
   }
 
   ngOnDestroy(): void {
-    this.gameService.endGame();
+    if(this.gameService.getCurrentGame() && !this.gameService.getCurrentGame().isFinished) {
+      this.gameService.pauseGame();
+    }
+    else if(this.gameService.isGameActive){
+      this.gameService.endGame()
+    }
   }
 
 }

@@ -7,6 +7,8 @@ import com.example.backend.service.GameService;
 import com.example.backend.service.QueueService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -73,6 +75,17 @@ public class GameController {
                     "/queue/game/notifications",
                     gameDto
             );
+        }
+    }
+
+    @GetMapping("game/current-game")
+    public ResponseEntity<Object> getCurrentGame(){
+        String playerId = SecurityContextHolder.getContext().getAuthentication().getName();
+        try {
+            GameDto currentGame = this.gameService.getCurrentGame(playerId);
+            return new ResponseEntity<>(currentGame, HttpStatus.OK);
+        }catch(Exception e){
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
     }
 
