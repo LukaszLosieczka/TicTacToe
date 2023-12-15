@@ -4,6 +4,7 @@ import {WebSocketService} from "../../services/web-socket.service";
 import {Game} from "../../model/Game";
 import {GameService} from "../../services/game.service";
 import {Router} from "@angular/router";
+import {UserService} from "../../../shared/services/user.service";
 @Component({
   selector: 'app-queue',
   standalone: true,
@@ -18,13 +19,21 @@ export class QueueComponent implements OnInit{
   receivedGame: Game;
   message: string;
 
-  constructor(private webSocketService: WebSocketService, private gameService: GameService, private router: Router) {
-    if(this.gameService.isGameActive){
-      this.router.navigate(['/game']);
-    }
-  }
+  constructor(private webSocketService: WebSocketService, private gameService: GameService, private router: Router,
+              private userService: UserService) {}
 
   ngOnInit(): void {
+    this.gameService.checkForAGame({
+      success: () => {
+        this.router.navigate(['/game']);
+      },
+      fail: () => {
+        this.connectToQueueServer();
+      }
+    });
+  }
+
+  connectToQueueServer():void{
     const topic = `/user/queue/notifications`;
     this.webSocketService.createAndConnect(topic);
     this.webSocketService.getConnectedStatus().subscribe((status) => {
@@ -34,7 +43,7 @@ export class QueueComponent implements OnInit{
       this.receivedGame = <Game> game;
       if(this.receivedGame.id) {
         this.inQueue = false;
-        this.message = "Znaleziono grę!";
+        this.message = "Game Found!";
         this.gameService.startGame(this.receivedGame);
       }
     });
@@ -42,8 +51,23 @@ export class QueueComponent implements OnInit{
 
   joinQueue(): void {
     this.inQueue = true;
-    this.message = "Wyszukiwanie..."
-    this.webSocketService.send('/app/queue', "connect");
+    this.message = "Searching..."
+    const at = this.userService.getAccessToken();
+    if(at && this.userService.isTokenValid(at)){
+      this.webSocketService.send('/app/queue', at);
+    }
+    else{
+      this.userService.refreshTokens()
+        .subscribe({
+          next: () => {
+            this.webSocketService.send('/app/queue', <string> this.userService.getAccessToken());
+          },
+          error: err => {
+            console.log(err);
+            this.userService.logout();
+          }
+        });
+    }
   }
 
   quitQueue(): void {
@@ -55,6 +79,8 @@ export class QueueComponent implements OnInit{
     if(this.inQueue){
       this.quitQueue();
     }
-    this.webSocketService.disconnect();
+    if(this.isConnected) {
+      this.webSocketService.disconnect();
+    }
   }
 }

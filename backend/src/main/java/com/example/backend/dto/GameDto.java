@@ -12,12 +12,10 @@ import java.time.LocalDateTime;
 @Builder
 public class GameDto {
     private String id;
-    private String player1;
-    private String player1Sign;
-    private String player2;
-    private String player2Sign;
+    private UserDto player1;
+    private UserDto player2;
     private String[][] board;
-    private String nextPlayer;
+    private String nextPlayerId;
     private LocalDateTime creationDate;
     private Boolean isFinished;
     private String winner;

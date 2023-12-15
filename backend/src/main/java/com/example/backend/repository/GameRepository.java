@@ -12,6 +12,7 @@ public interface GameRepository extends JpaRepository<Game, UUID> {
 
     Optional<Game> findById(UUID id);
 
-    @Query("SELECT g FROM Game g WHERE g.isFinished = false AND (g.player1 = :player OR g.player2 = :player)")
+    @Query("SELECT g FROM Game g " +
+            "WHERE g.isFinished = false AND (g.player1.playerId = :player OR g.player2.playerId = :player)")
     List<Game> findByIsFinishedFalseAndPlayer1OrPlayer2(String player);
 }

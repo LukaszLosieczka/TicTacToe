@@ -12,4 +12,5 @@ public interface AuthService {
     AuthTokens refreshTokens(String refreshToken) throws JsonProcessingException;
     void registerNewUserAccount(RegisterUser userDto);
     void confirmUserAccount(ConfirmationToken token);
+    String getUserName(String accessToken);
 }

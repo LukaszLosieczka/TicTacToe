@@ -3,6 +3,7 @@ package com.example.backend.controller;
 import com.example.backend.dto.GameDto;
 import com.example.backend.dto.Match;
 import com.example.backend.dto.MoveDto;
+import com.example.backend.service.AuthService;
 import com.example.backend.service.GameService;
 import com.example.backend.service.QueueService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.util.Objects;
 
 @Controller
 @RequiredArgsConstructor
@@ -25,6 +30,7 @@ public class GameController {
     private final SimpMessagingTemplate messagingTemplate;
     private final QueueService queueService;
     private final GameService gameService;
+    private final AuthService authService;
 
     @MessageMapping("/hello")
     @SendTo("/topic/greetings")
@@ -35,19 +41,20 @@ public class GameController {
     }
 
     @MessageMapping("/queue")
-    public void addToQueue(){
+    public void addToQueue(String accessToken){
         String playerId = SecurityContextHolder.getContext().getAuthentication().getName();
-        queueService.addPlayerToQueue(playerId);
+        String playerUsername = authService.getUserName(accessToken);
+        queueService.addPlayerToQueue(playerId, playerUsername);
         if(queueService.hasMatch()){
             Match match = queueService.findMatch();
             GameDto gameDto = gameService.createNewGame(match);
             messagingTemplate.convertAndSendToUser(
-                    match.getPlayer1Id(),
+                    match.getPlayer1().getPlayerId(),
                     "/queue/notifications",
                     gameDto
             );
             messagingTemplate.convertAndSendToUser(
-                    match.getPlayer2Id(),
+                    match.getPlayer2().getPlayerId(),
                     "/queue/notifications",
                     gameDto
             );
@@ -65,7 +72,8 @@ public class GameController {
         String playerId = SecurityContextHolder.getContext().getAuthentication().getName();
         GameDto gameDto = this.gameService.makeMove(gameId, playerId, move);
         messagingTemplate.convertAndSendToUser(
-                playerId.equals(gameDto.getPlayer1()) ? gameDto.getPlayer2() : gameDto.getPlayer1(),
+                playerId.equals(gameDto.getPlayer1().getPlayerId()) ? gameDto.getPlayer2().getPlayerId()
+                        : gameDto.getPlayer1().getPlayerId(),
                 "/queue/game/notifications",
                 gameDto
         );
@@ -87,6 +95,11 @@ public class GameController {
         }catch(Exception e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
+    }
+
+    @GetMapping("game/stats/leader-board")
+    public ResponseEntity<Object> getLeaderBoard(){
+        return null;
     }
 
     @GetMapping("game/test")

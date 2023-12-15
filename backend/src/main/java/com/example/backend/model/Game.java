@@ -17,23 +17,22 @@ public class Game {
     @Column(name = "id", nullable = false)
     private UUID id;
 
-    @Column(name = "player_1", nullable = false)
-    private String player1;
+    @Embedded
+    private User player1;
 
-    @Column(name = "player_1_sign", nullable = false)
-    private String player1Sign;
-
-    @Column(name = "player_2", nullable = false)
-    private String player2;
-
-    @Column(name = "player_2_sign", nullable = false)
-    private String player2Sign;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name="playerId", column=@Column(name="player2_id")),
+            @AttributeOverride(name="playerUsername", column=@Column(name="player2_username")),
+            @AttributeOverride(name="playerSign", column=@Column(name="player2_sign"))
+    })
+    private User player2;
 
     @Column(name = "board", nullable = false)
     private String board;
 
     @Column(name = "next_player")
-    private String nextPlayer;
+    private String nextPlayerId;
 
     @Column(name = "creation_date")
     private LocalDateTime creationDate;

@@ -1,11 +1,11 @@
+import {Player} from "./Player";
+
 export interface Game{
   id: string
-  player1: string
-  player1Sign: string
-  player2: string
-  player2Sign: string
+  player1: Player
+  player2: Player
   board: string [][]
-  nextPlayer: string | null
+  nextPlayerId: string | null
   creationDate: Date
   isFinished: boolean
   winner: string | null

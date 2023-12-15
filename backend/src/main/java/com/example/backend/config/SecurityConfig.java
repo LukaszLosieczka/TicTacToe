@@ -39,6 +39,7 @@ public class SecurityConfig {
                         authorizeRequests
                                 .requestMatchers(
                                         "/auth/**",
+                                        "/game/stats/**",
                                         "/ws/**",
                                         "/v2/api-docs",
                                         "/configuration/ui",

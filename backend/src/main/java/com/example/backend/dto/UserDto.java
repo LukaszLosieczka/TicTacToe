@@ -8,7 +8,8 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Match {
-    UserQueue player1;
-    UserQueue player2;
+public class UserDto {
+    private String playerId;
+    private String playerUsername;
+    private String playerSign;
 }

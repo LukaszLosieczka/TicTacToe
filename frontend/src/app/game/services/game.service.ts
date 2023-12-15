@@ -6,6 +6,7 @@ import {UserService} from "../../shared/services/user.service";
 import {Move} from "../model/Move";
 import {HttpClient} from "@angular/common/http";
 import {environment} from "../../../environments/environment";
+import {Player} from "../model/Player";
 
 @Injectable({
   providedIn: 'root'
@@ -22,25 +23,22 @@ export class GameService {
     this.webSocketService.getConnectedStatus().subscribe((status) =>{
       if(!status && !this.gameStarted && this.isGameActive){
         this.connectToServer();
-        this.gameStarted = true;
       }
     });
   }
 
-  checkForAGame(): void{
-    if(!this.isGameActive) {
-      this.http.get<Game>(environment.apiUrl + "game/current-game").subscribe({
-        next: (game) => {
-          this.currentGame = game;
-          this.isGameActive = true;
-          this.connectToServer();
-          this.gameStarted = true;
-        },
-        error: (_) => {
-          this.router.navigate(['/queue'])
-        }
-      });
-    }
+  checkForAGame(resolve?: {success?: () => void, fail?: () => void}): void {
+    this.http.get<Game>(environment.apiUrl + "game/current-game").subscribe({
+      next: (game) => {
+        this.currentGame = game;
+        this.isGameActive = true;
+        this.gameStarted = true;
+        if (resolve && resolve.success) resolve.success();
+      },
+      error: (_) => {
+        if (resolve && resolve.fail) resolve.fail;
+      }
+    });
   }
 
   startGame(game: Game): void{
@@ -51,10 +49,12 @@ export class GameService {
 
   makeMove(row: number, column: number): void{
     const playerId = this.userService.getUserId()
-    const sign = playerId === this.currentGame!.player1 ? this.currentGame.player1Sign : this.currentGame.player2Sign;
-    if(this.currentGame.nextPlayer === playerId && this.currentGame.board[row][column] === "null"){
+    const sign = playerId === this.currentGame.player1.playerId ? this.currentGame.player1.playerSign
+      : this.currentGame.player2.playerSign;
+    if(this.currentGame.nextPlayerId === playerId && this.currentGame.board[row][column] === "null"){
       this.currentGame.board[row][column] = sign;
-      this.currentGame.nextPlayer = playerId === this.currentGame.player1 ? this.currentGame.player2 : this.currentGame.player1;
+      this.currentGame.nextPlayerId = playerId === this.currentGame.player1.playerId ? this.currentGame.player2.playerId
+        : this.currentGame.player1.playerId;
       const move: Move = {row: row, column: column};
       this.webSocketService.send(`/app/move/${this.currentGame.id}`, JSON.stringify(move));
     }
@@ -62,12 +62,13 @@ export class GameService {
 
   canMove():boolean{
     const playerId = this.userService.getUserId();
-    return this.currentGame.nextPlayer === playerId;
+    return this.currentGame.nextPlayerId === playerId;
   }
 
-  private connectToServer(): void{
+  connectToServer(): void{
     const topic = `/user/queue/game/notifications`;
     this.webSocketService.createAndConnect(topic);
+    this.gameStarted = true;
     this.webSocketService.getConnectedStatus().subscribe((status) => {
       this.isConnected = status;
     });
@@ -84,13 +85,22 @@ export class GameService {
   }
 
   private copyGame(game: Game): void {
-    this.currentGame.nextPlayer = game.nextPlayer;
+    this.currentGame.nextPlayerId = game.nextPlayerId;
     this.currentGame.isFinished = game.isFinished;
     this.currentGame.winner = game.winner;
     for (let i = 0; i < game.board.length; i++) {
       for (let j = 0; j < game.board[i].length; j++) {
         this.currentGame.board[i][j] = game.board[i][j];
       }
+    }
+  }
+
+  getOpponent(): Player{
+    if(this.currentGame.player1.playerId === this.userService.getUserId()){
+      return this.currentGame.player2;
+    }
+    else{
+      return this.currentGame.player1;
     }
   }
 

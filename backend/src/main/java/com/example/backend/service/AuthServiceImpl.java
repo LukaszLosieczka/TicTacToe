@@ -1,15 +1,13 @@
 package com.example.backend.service;
 
-import com.example.backend.dto.AuthTokens;
-import com.example.backend.dto.ConfirmationToken;
-import com.example.backend.dto.LoginUser;
-import com.example.backend.dto.RegisterUser;
+import com.example.backend.dto.*;
 import com.example.backend.exception.TokenExpiredException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cognitoidentityprovider.CognitoIdentityProviderClient;
 import software.amazon.awssdk.services.cognitoidentityprovider.model.*;
@@ -96,6 +94,7 @@ class AuthServiceImpl implements AuthService{
     public void registerNewUserAccount(RegisterUser userDto) {
         CognitoIdentityProviderClient cognitoClient = CognitoIdentityProviderClient.builder()
                 .region(Region.of(awsRegion))
+                .credentialsProvider(DefaultCredentialsProvider.create())
                 .build();
 
         SignUpRequest signUpRequest = SignUpRequest.builder()
@@ -141,6 +140,22 @@ class AuthServiceImpl implements AuthService{
         catch(InvalidParameterException ex){
             log.info(ex.getMessage());
             throw new IllegalArgumentException("Nieudana próba potwierdzenia konta");
+        }
+    }
+
+    @Override
+    public String getUserName(String accessToken) {
+        CognitoIdentityProviderClient cognitoClient = CognitoIdentityProviderClient.builder()
+                .region(Region.of(awsRegion))
+                .build();
+        GetUserRequest getUserRequest = GetUserRequest.builder()
+                .accessToken(accessToken)
+                .build();
+        try {
+            GetUserResponse userResponse = cognitoClient.getUser(getUserRequest);
+            return userResponse.username();
+        } catch (CognitoIdentityProviderException e) {
+            return null;
         }
     }
 

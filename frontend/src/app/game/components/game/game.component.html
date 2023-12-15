@@ -1,7 +1,7 @@
 <div class="container d-flex flex-column justify-content-center align-items-center shadow lg p-3 mb-5 bg-white rounded my-5">
   <h1>Tic Tac Toe</h1>
   <div *ngIf="isGameActive() || getGame(); else loadingBlock" class="d-flex flex-column justify-content-center align-items-center">
-    <h3 *ngIf="getGame().winner !== null">Koniec gry! Wygrał: {{getGame().winner}}</h3>
+    <h3 *ngIf="getGame().winner !== null">Game Over! {{getWinner()}}</h3>
     <table>
       <tr *ngFor="let row of getGame().board; let x = index">
         <td *ngFor="let cell of row; let y = index">
@@ -11,6 +11,7 @@
         </td>
       </tr>
     </table>
+    <h4>Your opponent is: {{getOpponent()}}</h4>
   </div>
   <ng-template #loadingBlock>Loading Game...</ng-template>
 </div>
