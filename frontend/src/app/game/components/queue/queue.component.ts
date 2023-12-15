@@ -25,6 +25,7 @@ export class QueueComponent implements OnInit{
   ngOnInit(): void {
     this.gameService.checkForAGame({
       success: () => {
+        this.webSocketService.getConnectedStatus().next(false);
         this.router.navigate(['/game']);
       },
       fail: () => {

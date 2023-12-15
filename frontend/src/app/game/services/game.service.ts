@@ -32,7 +32,6 @@ export class GameService {
       next: (game) => {
         this.currentGame = game;
         this.isGameActive = true;
-        this.gameStarted = true;
         if (resolve && resolve.success) resolve.success();
       },
       error: () => {
@@ -66,9 +65,9 @@ export class GameService {
   }
 
   connectToServer(): void{
+    this.gameStarted = true;
     const topic = `/user/queue/game/notifications`;
     this.webSocketService.createAndConnect(topic);
-    this.gameStarted = true;
     this.webSocketService.getConnectedStatus().subscribe((status) => {
       this.isConnected = status;
     });

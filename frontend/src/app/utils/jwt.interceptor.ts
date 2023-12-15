@@ -1,6 +1,6 @@
 import {Injectable} from "@angular/core";
 import {HttpEvent, HttpHandler, HttpInterceptor, HttpRequest} from "@angular/common/http";
-import {Observable} from "rxjs";
+import {catchError, Observable, switchMap, throwError} from "rxjs";
 import {environment} from "../../environments/environment";
 import {UserService} from "../shared/services/user.service";
 
@@ -16,22 +16,28 @@ export class JwtInterceptor implements HttpInterceptor {
     }
     const isApiUrl = request.url.startsWith(environment.apiUrl);
     const isLoggedIn = this.userService.isLoggedIn;
-    const at = this.userService.getAccessToken();
+    let at = this.userService.getAccessToken();
     let isAccessTokenValid = at && this.userService.isTokenValid(at);
-    if(isLoggedIn && !isAccessTokenValid) {
-      this.userService.refreshTokens()
-        .subscribe({
-          next: () => {
-            isAccessTokenValid = true
-          },
-          error: err => {
-            console.log(err);
-            this.userService.logout();
-          }
-        });
-
-    }
-    if (isLoggedIn && isApiUrl && isAccessTokenValid) {
+    if(isLoggedIn && isApiUrl) {
+      if (!isAccessTokenValid) {
+        return this.userService.refreshTokens()
+          .pipe(
+            switchMap(() => {
+              at = this.userService.getAccessToken();
+              request = request.clone({
+                setHeaders: {
+                  Authorization: `Bearer ${at}`
+                }
+              });
+              return next.handle(request);
+            }),
+            catchError(error => {
+              console.log(error);
+              this.userService.logout();
+              return throwError(() => error);
+            })
+          );
+      }
       request = request.clone({
         setHeaders: {
           Authorization: `Bearer ${at}`
