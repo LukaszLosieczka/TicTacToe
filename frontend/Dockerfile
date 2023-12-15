@@ -25,6 +25,8 @@ FROM nginx:alpine
 # Remove default nginx welcome page
 RUN rm -rf /usr/share/nginx/html/*
 
+COPY --from=build /app/nginx.conf /etc/nginx/conf.d/default.conf
+
 # Copy the built Angular app from the previous stage to the nginx public directory
 COPY --from=build /app/dist/frontend/browser/* /usr/share/nginx/html/
 
