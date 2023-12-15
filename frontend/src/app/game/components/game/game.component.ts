@@ -20,9 +20,6 @@ export class GameComponent implements OnInit{
         fail: () => this.router.navigate(['/queue'])
       });
     }
-    else{
-      this.gameService.connectToServer();
-    }
   }
 
   ngOnInit(): void {}

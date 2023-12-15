@@ -35,8 +35,8 @@ export class GameService {
         this.gameStarted = true;
         if (resolve && resolve.success) resolve.success();
       },
-      error: (_) => {
-        if (resolve && resolve.fail) resolve.fail;
+      error: () => {
+        if (resolve && resolve.fail) resolve.fail();
       }
     });
   }
