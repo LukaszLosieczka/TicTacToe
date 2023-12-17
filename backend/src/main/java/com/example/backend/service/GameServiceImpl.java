@@ -1,8 +1,6 @@
 package com.example.backend.service;
 
-import com.example.backend.dto.GameDto;
-import com.example.backend.dto.Match;
-import com.example.backend.dto.MoveDto;
+import com.example.backend.dto.*;
 import com.example.backend.mapper.GameMapper;
 import com.example.backend.mapper.UserMapper;
 import com.example.backend.model.Game;
@@ -13,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -83,6 +82,15 @@ class GameServiceImpl implements GameService{
                     : game.getPlayer1().getPlayerId());
         }
         return GameMapper.toGameDto(this.gameRepository.save(game));
+    }
+
+    @Override
+    public List<LeaderBoardPos> getLeaderBoard() {
+        return this.gameRepository.getLeaderBoard().stream()
+                .map(objects -> (Object[]) objects)
+                .map(stats -> new LeaderBoardPos((String)stats[0], (Long)stats[1], (Long)stats[2], (Long)stats[3]))
+                .sorted(Comparator.comparing(LeaderBoardPos::getPoints).reversed())
+                .collect(Collectors.toList());
     }
 
     private Boolean checkForWinner(String player, String[][] board){

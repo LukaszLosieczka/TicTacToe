@@ -99,7 +99,7 @@ public class GameController {
 
     @GetMapping("game/stats/leader-board")
     public ResponseEntity<Object> getLeaderBoard(){
-        return null;
+        return new ResponseEntity<>(this.gameService.getLeaderBoard(), HttpStatus.OK);
     }
 
     @GetMapping("game/test")

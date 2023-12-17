@@ -37,13 +37,16 @@ export class JwtInterceptor implements HttpInterceptor {
               return throwError(() => error);
             })
           );
+      } else {
+        request = request.clone({
+          setHeaders: {
+            Authorization: `Bearer ${at}`
+          }
+        });
+        return next.handle(request);
       }
-      request = request.clone({
-        setHeaders: {
-          Authorization: `Bearer ${at}`
-        }
-      });
+    } else {
+      return next.handle(request)
     }
-    return next.handle(request);
   }
 }
