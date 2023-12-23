@@ -65,6 +65,10 @@ export class GameService {
     }
   }
 
+  quitGame(): void{
+    this.webSocketService.send(`/app/move/${this.currentGame.id}/quit`, 'QUIT_GAME');
+  }
+
   canMove():boolean{
     const playerId = this.userService.getUserId();
     return this.currentGame.nextPlayerId === playerId;

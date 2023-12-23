@@ -12,5 +12,7 @@ public interface GameService {
 
     GameDto makeMove(String gameId, String playerId, MoveDto move);
 
+    GameDto quitGame(String gameId, String playerId);
+
     List<LeaderBoardPos> getLeaderBoard();
 }

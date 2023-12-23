@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import {GameService} from "../../services/game.service";
 import {Game} from "../../model/Game";
 import {Router} from "@angular/router";
+import {UserService} from "../../../shared/services/user.service";
 
 @Component({
   selector: 'app-game',
@@ -13,7 +14,7 @@ import {Router} from "@angular/router";
 })
 export class GameComponent implements OnInit{
 
-  constructor(private gameService: GameService, private router: Router) {
+  constructor(private gameService: GameService, private userService: UserService, private router: Router) {
     if(!this.gameService.isGameActive){
       this.gameService.checkForAGame({
         success: () => this.gameService.connectToServer(),
@@ -37,16 +38,13 @@ export class GameComponent implements OnInit{
   }
 
   getWinner(): string{
-    let message = "The winner is ";
     if(this.getGame().winner){
-      if(this.getGame().winner === this.getGame().player1.playerId){
-        message += this.getGame().player1.playerUsername;
+      if(this.getGame().winner === this.userService.getUserId()){
+        return "You Won!";
       }
-      else{
-        message += this.getGame().player2.playerUsername;
-      }
+      return "You Lost!";
     }
-    return message;
+    return "Draw!";
   }
 
   getOpponent(): string{
@@ -59,6 +57,10 @@ export class GameComponent implements OnInit{
 
   isCellEmpty(row: number, col: number){
     return this.getGame().board[row][col] === "null";
+  }
+
+  quitGame(){
+    this.gameService.quitGame();
   }
 
   ngOnDestroy(): void {

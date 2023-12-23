@@ -86,6 +86,22 @@ public class GameController {
         }
     }
 
+    @MessageMapping("/move/{gameId}/quit")
+    public void quitGame(@DestinationVariable String gameId){
+        String playerId = SecurityContextHolder.getContext().getAuthentication().getName();
+        GameDto gameDto = this.gameService.quitGame(gameId, playerId);
+        messagingTemplate.convertAndSendToUser(
+                gameDto.getPlayer1().getPlayerId(),
+                "/queue/game/notifications",
+                gameDto
+        );
+        messagingTemplate.convertAndSendToUser(
+                gameDto.getPlayer2().getPlayerId(),
+                "/queue/game/notifications",
+                gameDto
+        );
+    }
+
     @GetMapping("game/current-game")
     public ResponseEntity<Object> getCurrentGame(){
         String playerId = SecurityContextHolder.getContext().getAuthentication().getName();

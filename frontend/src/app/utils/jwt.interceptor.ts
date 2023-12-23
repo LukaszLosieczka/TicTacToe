@@ -22,7 +22,13 @@ export class JwtInterceptor implements HttpInterceptor {
       if (!isAccessTokenValid) {
         return this.userService.refreshTokens()
           .pipe(
+            catchError(error => {
+              console.log(error);
+              this.userService.logout();
+              return throwError(() => error);
+            }),
             switchMap(() => {
+              console.log("Sending request with refreshed token");
               at = this.userService.getAccessToken();
               request = request.clone({
                 setHeaders: {
@@ -30,11 +36,6 @@ export class JwtInterceptor implements HttpInterceptor {
                 }
               });
               return next.handle(request);
-            }),
-            catchError(error => {
-              console.log(error);
-              this.userService.logout();
-              return throwError(() => error);
             })
           );
       } else {

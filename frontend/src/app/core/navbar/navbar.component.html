@@ -2,10 +2,10 @@
   <a class="navbar-brand mx-2" ><h1 class="text-light">TicTacToe</h1></a>
   <ul class="navbar-nav me-auto">
     <li class="nav-item">
-      <a [routerLink]="['/leader-board']" class="nav-link text-light" >Leader Board</a>
+      <a [routerLink]="['/leader-board']" class="nav-link text-light rounded" style="font-size: 15pt">Leader Board</a>
     </li>
     <li class="nav-item" *ngIf="isLoggedIn()">
-      <a [routerLink]="['/queue']" class="nav-link text-light">Game</a>
+      <a [routerLink]="['/queue']" class="nav-link text-light rounded" style="font-size: 15pt">Game</a>
   </ul>
   <ul class="nav navbar-nav me-2">
     <li *ngIf="!isLoggedIn()">

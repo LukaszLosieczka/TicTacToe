@@ -85,6 +85,20 @@ class GameServiceImpl implements GameService{
     }
 
     @Override
+    public GameDto quitGame(String gameId, String playerId) {
+        Game game = this.gameRepository.findById(UUID.fromString(gameId))
+                .orElseThrow(() -> new IllegalArgumentException("Game not found"));
+        if(game.getIsFinished()){
+            throw new IllegalArgumentException("Game is finished!");
+        }
+        User opponent = playerId.equals(game.getPlayer1().getPlayerId()) ? game.getPlayer2() : game.getPlayer1();
+        game.setWinner(opponent.getPlayerId());
+        game.setIsFinished(true);
+        game.setNextPlayerId(null);
+        return GameMapper.toGameDto(this.gameRepository.save(game));
+    }
+
+    @Override
     public List<LeaderBoardPos> getLeaderBoard() {
         return this.gameRepository.getLeaderBoard().stream()
                 .map(objects -> (Object[]) objects)

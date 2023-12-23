@@ -120,7 +120,6 @@ export class WebSocketService {
       this.userService.refreshTokens()
         .subscribe({
           next: () => {
-            console.log("Access token refreshed")
             resolve();
           },
           error: err => {
