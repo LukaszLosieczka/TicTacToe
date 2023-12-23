@@ -1,1 +1,25 @@
-<p>leader-board works!</p>
+<div class="container shadow-lg p-3 mb-5 bg-white rounded my-5">
+  <h1 class="text-center my-4">Leader board</h1>
+  <table class="table">
+    <thead class="bg-secondary bg-opacity-50">
+    <tr>
+      <th>Ranking</th>
+      <th>Username</th>
+      <th>Games won</th>
+      <th>Games lost</th>
+      <th>Draws</th>
+      <th>Points</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let position of getLeaderBoard(); let i = index">
+      <td> {{i+1}}</td>
+      <td [ngClass]="{'text-primary fw-bold': isUser(position.userId)}" > {{position.username}}</td>
+      <td> {{position.wonGames}}</td>
+      <td> {{position.lostGames}}</td>
+      <td> {{position.draws}}</td>
+      <td> {{position.points}}</td>
+    </tbody>
+  </table>
+  <h4 *ngIf="getLeaderBoard().length === 0" class="text-center my-4">Leader board is empty</h4>
+</div>

@@ -7,6 +7,8 @@ import {Move} from "../model/Move";
 import {HttpClient} from "@angular/common/http";
 import {environment} from "../../../environments/environment";
 import {Player} from "../model/Player";
+import {LeaderBoardPos} from "../model/LeaderBoardPos";
+import {Observable} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
@@ -38,6 +40,10 @@ export class GameService {
         if (resolve && resolve.fail) resolve.fail();
       }
     });
+  }
+
+  getLeaderBoard():Observable<LeaderBoardPos[]>{
+    return this.http.get<LeaderBoardPos[]>(environment.apiUrl + "game/stats/leader-board");
   }
 
   startGame(game: Game): void{

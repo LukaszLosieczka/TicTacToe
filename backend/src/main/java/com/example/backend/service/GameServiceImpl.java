@@ -88,7 +88,7 @@ class GameServiceImpl implements GameService{
     public List<LeaderBoardPos> getLeaderBoard() {
         return this.gameRepository.getLeaderBoard().stream()
                 .map(objects -> (Object[]) objects)
-                .map(stats -> new LeaderBoardPos((String)stats[0], (Long)stats[1], (Long)stats[2], (Long)stats[3]))
+                .map(stats -> new LeaderBoardPos((String)stats[0], (String)stats[1], (Long)stats[2], (Long)stats[3], (Long)stats[4]))
                 .sorted(Comparator.comparing(LeaderBoardPos::getPoints).reversed())
                 .collect(Collectors.toList());
     }

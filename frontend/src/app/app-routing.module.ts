@@ -8,6 +8,7 @@ import {HomeLayoutComponent} from "./layouts/home-layout/home-layout.component";
 import {QueueComponent} from "./game/components/queue/queue.component";
 import {LeaderBoardComponent} from "./game/components/leader-board/leader-board.component";
 import {GameComponent} from "./game/components/game/game.component";
+import {leaderBoardResolver} from "./game/resolvers/leader-board.resolver";
 
 export const routes: Routes = [
   {
@@ -26,7 +27,10 @@ export const routes: Routes = [
       },
       {
         path: 'leader-board',
-        component: LeaderBoardComponent
+        component: LeaderBoardComponent,
+        resolve: {
+          leaderBoard: leaderBoardResolver
+        }
       },
       {
         path: 'game',
