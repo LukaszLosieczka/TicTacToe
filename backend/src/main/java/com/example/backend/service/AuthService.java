@@ -4,7 +4,6 @@ import com.example.backend.dto.AuthTokens;
 import com.example.backend.dto.ConfirmationToken;
 import com.example.backend.dto.LoginUser;
 import com.example.backend.dto.RegisterUser;
-import com.example.backend.model.User;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.security.authentication.BadCredentialsException;
 
@@ -13,4 +12,5 @@ public interface AuthService {
     AuthTokens refreshTokens(String refreshToken) throws JsonProcessingException;
     void registerNewUserAccount(RegisterUser userDto);
     void confirmUserAccount(ConfirmationToken token);
+    String getUserName(String accessToken);
 }

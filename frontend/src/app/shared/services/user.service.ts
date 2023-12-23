@@ -65,6 +65,7 @@ export class UserService {
           const rt = data.refresh_token;
           const at = data.access_token;
           this.saveTokens(rt, at);
+          console.log("Access token refreshed");
         }
       ));
   }

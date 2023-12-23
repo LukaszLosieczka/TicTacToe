@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Match {
-    UserQueue player1;
-    UserQueue player2;
+public class MoveDto {
+    private int row;
+    private int column;
 }

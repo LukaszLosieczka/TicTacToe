@@ -1,33 +1,16 @@
 package com.example.backend.model;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
+import jakarta.persistence.Embeddable;
+import lombok.*;
 
+@Embeddable
 @Getter
 @Setter
-@Entity
-@SuperBuilder
 @NoArgsConstructor
-@Table(name = "user")
+@AllArgsConstructor
+@Builder
 public class User {
-    @Id
-    @Column(name = "login", nullable = false)
-    private String login;
-
-    @Column(name = "password", nullable = false)
-    private String password;
-
-    @ManyToOne
-    @JoinColumn(name = "role")
-    private Role role;
-
-    @Column(name = "surname", nullable = false)
-    private String surname;
-
-    @Column(name = "name", nullable = false)
-    private String name;
-
+    private String playerId;
+    private String playerUsername;
+    private String playerSign;
 }

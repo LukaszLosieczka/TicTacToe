@@ -14,7 +14,7 @@ export class WebSocketService {
   private socket: WebSocket;
   private isConnected = new BehaviorSubject<boolean>(false);
   private subscriptions: Map<string, Stomp.StompSubscription> = new Map<string, Stomp.StompSubscription>();
-  private messages: Map<string, BehaviorSubject<string>> = new Map<string, BehaviorSubject<string>>();
+  private messages: Map<string, BehaviorSubject<object>> = new Map<string, BehaviorSubject<object>>();
 
   constructor(private userService: UserService) {}
 
@@ -44,9 +44,10 @@ export class WebSocketService {
 
     this.stompClient.onDisconnect = (frame) => {
       console.log("Disconnected: " + frame);
-      that.isConnected.next(false);
       that.subscriptions.forEach((subscription) => subscription.unsubscribe());
       that.subscriptions.clear();
+      that.messages.clear();
+      that.isConnected.next(false);
     };
 
     this.stompClient.onWebSocketError = (error) => {
@@ -59,11 +60,11 @@ export class WebSocketService {
     return this.isConnected;
   }
 
-  getMessage(topic: string): BehaviorSubject<string> {
+  getMessage(topic: string): BehaviorSubject<object> {
     if(!this.messages.get(topic)) {
-      this.messages.set(topic, new BehaviorSubject<string>(''));
+      this.messages.set(topic, new BehaviorSubject<object>({}));
     }
-    return <BehaviorSubject<string>> this.messages.get(topic);
+    return <BehaviorSubject<object>> this.messages.get(topic);
   }
 
   send(destination: string, message: string): void {
@@ -79,11 +80,11 @@ export class WebSocketService {
 
   subscribe(topic: string): void{
     if(!this.messages.get(topic)) {
-      this.messages.set(topic, new BehaviorSubject<string>(''));
+      this.messages.set(topic, new BehaviorSubject<object>({}));
     }
     const subscription = this.stompClient.subscribe(topic, (message) => {
       console.log("Message received: " + message.body);
-      const receivedMessage = message.body;
+      const receivedMessage = JSON.parse(message.body);
       this.messages.get(topic)!.next(receivedMessage);
     });
     this.subscriptions.set(topic, subscription);
@@ -91,6 +92,7 @@ export class WebSocketService {
 
   unsubscribe(topic: string): void {
     const subscription = this.subscriptions.get(topic);
+    this.messages.delete(topic);
     if (subscription) {
       subscription.unsubscribe();
       this.subscriptions.delete(topic);
@@ -118,7 +120,6 @@ export class WebSocketService {
       this.userService.refreshTokens()
         .subscribe({
           next: () => {
-            console.log("Access token refreshed")
             resolve();
           },
           error: err => {
