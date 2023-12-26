@@ -1,0 +1,33 @@
+<div class="card shadow-lg mb-5 bg-white rounded">
+  <h4 class="card-header">Confirm registration</h4>
+  <div class="card-body">
+    <h6>Use the code from email you provided to confirm your account.</h6>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()">
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" formControlName="username" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.username.errors }" />
+        <div *ngIf="submitted && f.username.errors" class="invalid-feedback">
+          <div *ngIf="f.username.errors.required">Username is mandatory</div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Confirmation code</label>
+        <input type="text" formControlName="code" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.code.errors }" />
+        <div *ngIf="submitted && f.code.errors" class="invalid-feedback">
+          <div *ngIf="f.code.errors.required">Code is mandatory</div>
+        </div>
+        <div *ngIf="isError" class="text-danger">
+          {{errorMessage}}
+        </div>
+        <h5 *ngIf="confirmed" class="text-success">Confirmation successful!</h5>
+      </div>
+      <div>
+        <button *ngIf="!confirmed" [disabled]="loading" class="btn btn-primary">
+          <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
+          Confirm
+        </button>
+        <a *ngIf="confirmed" routerLink="../login" class="btn btn-primary">Sign in</a>
+      </div>
+    </form>
+  </div>
+</div>
