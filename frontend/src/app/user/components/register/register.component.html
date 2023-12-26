@@ -1,28 +1,28 @@
 <div class="card shadow-lg mb-5 bg-white rounded">
-  <h4 class="card-header">Rejestracja</h4>
+  <h4 class="card-header">Sign up</h4>
   <div class="card-body">
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <div class="mb-3">
         <label class="form-label">Email</label>
         <input type="text" formControlName="email" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.email.errors }" />
         <div *ngIf="submitted && f.email.errors" class="invalid-feedback">
-          <div *ngIf="f.email.errors.required">Email jest obowiązkowy</div>
-          <div *ngIf="f.email.errors.email">Zły format email</div>
+          <div *ngIf="f.email.errors.required">Email is mandatory</div>
+          <div *ngIf="f.email.errors.email">Wrong email format</div>
         </div>
       </div>
       <div class="mb-3">
-        <label class="form-label">Login</label>
+        <label class="form-label">Username</label>
         <input type="text" formControlName="username" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.username.errors }" />
         <div *ngIf="submitted && f.username.errors" class="invalid-feedback">
-          <div *ngIf="f.username.errors.required">Login jest obowiązkowy</div>
+          <div *ngIf="f.username.errors.required">Username is mandatory</div>
         </div>
       </div>
       <div class="mb-3">
-        <label class="form-label">Hasło</label>
+        <label class="form-label">Password</label>
         <input type="password" formControlName="password" class="form-control" [ngClass]="{ 'is-invalid': submitted && f.password.errors }" />
         <div *ngIf="submitted && f.password.errors" class="invalid-feedback">
-          <div *ngIf="f.password.errors.required">Hasło jest obowiązkowe</div>
-          <div *ngIf="f.password.errors.minlength">Hasło musi mieć conajmniej 6 znaków</div>
+          <div *ngIf="f.password.errors.required">Password is mandatory</div>
+          <div *ngIf="f.password.errors.minlength">Password needs to have at least 6 characters</div>
         </div>
         <div *ngIf="isError" class="text-danger">
           {{errorMessage}}
@@ -31,9 +31,9 @@
       <div>
         <button [disabled]="loading" class="btn btn-primary">
           <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
-          Zarejestruj się
+          Sign up
         </button>
-        <a routerLink="../login" class="btn btn-link">Anuluj</a>
+        <a routerLink="../login" class="btn btn-link">Cancel</a>
       </div>
     </form>
   </div>

@@ -6,6 +6,7 @@ import {jwtDecode} from "jwt-decode";
 import {TokenPayload} from "../model/token";
 import {Router} from "@angular/router";
 import {environment} from "../../../environments/environment";
+import {ConfirmationToken} from "../../user/model/ConfirmationToken";
 
 const REFRESH_TOKEN = "rt";
 const ACCESS_TOKEN = "at";
@@ -44,6 +45,14 @@ export class UserService {
     });
     // @ts-ignore
     return this.http.post<any>(environment.apiUrl + "auth/signup", user, {headers, responseType: 'text'});
+  }
+
+  confirmRegistration(token: ConfirmationToken): Observable<any>{
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+    // @ts-ignore
+    return this.http.post<any>(environment.apiUrl + "auth/confirm_user", token, {headers, responseType: 'text'});
   }
 
   refreshTokens() {

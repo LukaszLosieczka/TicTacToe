@@ -9,6 +9,7 @@ import {QueueComponent} from "./game/components/queue/queue.component";
 import {LeaderBoardComponent} from "./game/components/leader-board/leader-board.component";
 import {GameComponent} from "./game/components/game/game.component";
 import {leaderBoardResolver} from "./game/resolvers/leader-board.resolver";
+import {ConfirmComponent} from "./user/components/confirm/confirm.component";
 
 export const routes: Routes = [
   {
@@ -52,6 +53,11 @@ export const routes: Routes = [
         path: 'register',
         canActivate: [AuthGuard],
         component: RegisterComponent
+      },
+      {
+        path: 'confirm',
+        canActivate: [AuthGuard],
+        component: ConfirmComponent
       }
     ]
   },
