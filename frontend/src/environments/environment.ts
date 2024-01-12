@@ -4,8 +4,8 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080/',
-  brokerUrl: 'http://localhost:8080/ws'
+  apiUrl: 'http://tictactoe-env.eba-p3vemxbk.us-east-1.elasticbeanstalk.com:8080/',
+  brokerUrl: 'http://tictactoe-env.eba-p3vemxbk.us-east-1.elasticbeanstalk.com:8080/ws'
 };
 
 /*

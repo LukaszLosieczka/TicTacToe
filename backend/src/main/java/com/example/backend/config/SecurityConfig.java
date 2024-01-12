@@ -1,6 +1,7 @@
 package com.example.backend.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -29,6 +30,9 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableMethodSecurity
 @Order(1)
 public class SecurityConfig {
+
+    @Value("${allowed.origin}")
+    private String allowedOrigin;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -73,7 +77,8 @@ public class SecurityConfig {
         corsConfig.addAllowedMethod(String.valueOf(HttpMethod.PUT));
 
         corsConfig.setAllowCredentials(true);
-        corsConfig.setAllowedOrigins(Collections.singletonList("http://localhost"));
+        corsConfig.setAllowedOrigins(Collections.singletonList(this.allowedOrigin));
+        System.out.println(this.allowedOrigin);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfig);

@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:8080/',
-  brokerUrl: 'ws://localhost:8080/ws'
+  apiUrl: 'http://backend-loadbalancer-888952212.us-east-1.elb.amazonaws.com:8080/',
+  brokerUrl: 'ws://backend-loadbalancer-888952212.us-east-1.elb.amazonaws.com:8080/ws'
 };
