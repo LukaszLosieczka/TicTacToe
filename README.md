@@ -1,1 +1,1 @@
-# TicTacToe
+# TicTacToe - AWS project
